@@ -60,7 +60,7 @@ def from_objects(*combatants, **kwargs):
 
 def combat(*forces):
 	"""Run a combat between any combination of forces.
-	Each force represents all ships owned by a given player.
+	Each force represents all involved ships owned by a given player.
 	The first force should be the defender, with forces then proceeding in order of player index (wrapping around).
 	Each force has form (player_WS, force_list).
 	Each force list should be a list of integers, giving the ships of the player and how they're split.
@@ -123,8 +123,8 @@ def simple((def_WS, def_n), (att_WS, att_n)):
 	It returns (def_won, remaining) where def_won is true if defender won, else false,
 	and remaining is the number of remaining ships on the winning side.
 	"""
-	att_left = att_n - math.ceil(def_n/att_WS) * (def_WS + 1)
-	def_left = def_n - (math.ceil(att_n/(def_WS+1)) - 1) * att_WS
+	att_left = att_n - int(math.ceil(def_n/att_WS)) * (def_WS + 1)
+	def_left = def_n - (int(math.ceil(att_n/(def_WS+1))) - 1) * att_WS
 	if def_left > 0:
 		return True, def_left
 	else:
