@@ -1,0 +1,231 @@
+
+POST http://triton.ironhelmet.com/grequest/order
+Cookie: ???
+Content-Type: application/x-www-form-urlencoded
+
+Form data:
+	type: order
+	order: full_universe_report
+	game_number: GAME_NUMBER
+
+Returns 200, JSON:
+{
+	event: "order:full_universe",
+	report: {
+		admin: player index of game admin
+		fleet_speed: float ??? (invariant?)
+		fleets: {fleet_id: fleet object} (visible fleets only)
+		game_over: int (observed: 0 for running game. assumed: 1 for finished game)
+		name: string game name
+		now: int, believed to be epoch time in milliseconds
+		paused: bool, indicates if game is paused
+		player_uid: player index of player that requested this info
+		players: {player index: player object}
+		production_counter: int, unknown (hypothesis: number of ticks elapsed this production cycle)
+		production_rate: int, unknown (invariant?) (hypothesis: number of ticks per production cycle)
+		productions: int, hypothesis: number of complete production cycles
+		stars: {star_id: star object}
+		stars_for_victory: int. invariant. number of stars needed to win.
+		start_time: int, believed to be game start time in epoch time in milliseconds
+		started: bool. assumed to be true for started games, else false
+		starting_bonus: int, invariant. Cash bonus joining player gets per player already joined.
+		tick: int. assumed to be tick number, ie. the number of completed ticks since game start.
+		tick_fragment: int. ???. Might be number of minutes currently through tick.
+		tick_rate: int. assumed to be invariant, minutes per tick
+		total_stars: int. invariant. total stars in galaxy.
+		trade_cost: int. assumed to be cash cost per tech level in tech trades
+		turn_based: int. assumed invariant, observed: 0. assumed: 1 for turn-based games.
+		turn_based_time_out: int. assumed to be hours (or minutes?) time out in a turn-based game.
+		war: int. unknown.
+	}
+}
+Fleet object: {
+	lx: string float. unknown. similar but different value to x.
+	ly: string float. unknown. similar but different value to y.
+	x: string float. unknown.
+	y: string float. unknown.
+	n: string. fleet name.
+	p: list of star ids, describing planned path.
+	puid: player index of owner.
+	st: number of ships in fleet
+	uid: fleet id. int. appears sequential from game start, across all players.
+	w: int. unknown. observed: 0
+}
+Player object: {
+	alias: string, player name
+	avatar: int, identifies player avatar image
+	conceded: assumed 0 for normal player, 1 for conceded player.
+	huid: int. seems to be uid + 1. might mean "human uid" ?
+	karma_to_give: int. karma points not already given.
+	missed_turns: int. only observed so far as 0, may be related to turn-based games or to marking of AFK.
+	ready: int. assumed to be 0 for players not marked ready, 1 for players marked ready in turn-based games.
+	tech: {tech name: tech object}
+	total_economy: as expected.
+	total_fleets: as expected.
+	total_industry: as expected.
+	total_science: as expected.
+	total_stars: as expected.
+	total_strength: total ships.
+	uid: player index.
+	user_id: string. observed to be 21 characters and numeric, this seems to be a true unique id for a user.
+	ONLY PRESENT FOR THE PLAYER WHICH REQUESTED THE INFO:
+	cash: int. amount of cash available.
+	researching: name of tech currently researching
+	researching_next: name of tech to research next
+}
+Tech names are as follows:
+	"banking", "manufacturing", "propulsion" (range), "research" (experiementation),
+	"scanning", "terraforming", "weapons"
+Tech object: {
+	level: Player's current tech level in this tech
+	value: Seems related to tech level.
+	ONLY PRESENT FOR THE PLAYER WHICH REQUESTED THE INFO:
+	sv: unknown
+	research: current number of research points in this tech
+	bv: unknown. might be "base value"?
+	brr: number of research points needed to complete current level
+}
+
+
+POST http://triton.ironhelmet.com/grequest/fetch_unread_count
+Cookie: ???
+Content-Type: application/x-www-form-urlencoded
+
+Form data:
+	type: fetch_unread_count
+	game_number: GAME_NUMBER
+
+Returns 200, JSON:
+{
+	event: "message:unread_count"
+	report: {
+		diplomacy: string int, number of unread diplomacy messages
+		events: string int, number of unread game event messages
+	}
+}
+
+
+POST http://triton.ironhelmet.com/grequest/intel_data
+Cookie: ???
+Content-Type: application/x-www-form-urlencoded
+
+Form data:
+	type: intel_data
+	game_number: GAME_NUMBER
+
+Returns 200, JSON:
+{
+	event: "order:intel_data"
+	report: {
+		stats: [data point object, in order from new to old]
+	}
+}
+data point object: {
+	tick: int tick number this data point represents
+	players: [player intel object, in order of player index]
+}
+player intel object: {
+	ts: Total stars
+	e: Total economy
+	i: Total industry
+	s: Total science
+	sh: Total ships
+	fl: Total fleets
+	wt: Weapons tech
+	bt: Banking tech
+	mt: Manufacturing tech
+	ht: Hyperspace (range) tech
+	st: Scanning tech
+	gt: General research (experimentation) tech
+	tt: Terraforming tech
+	uid: player index
+}
+
+
+POST http://triton.ironhelmet.com/grequest/fetch_game_messages
+Cookie: ???
+Content-Type: application/x-www-form-urlencoded
+
+Form data:
+	type: fetch_game_message_comments
+	game_number: GAME_NUMBER
+	group: either "game_event" or "game_diplomacy"
+	count: number of messages to fetch (UI asks for 10)
+	offset: for fetching more messages past the first count
+
+Returns 200, JSON:
+{
+	event: "messages:new_messages"
+	report: {
+		group: as in form data
+		messages: [message object, ordered newest to oldest]
+	}
+}
+Common date format:
+	Like "Jun 11 2013 12:50:32 GMT+0000"
+	Seems it's always in GMT+0000
+message object (only diplomacy message observed): {
+	activity: Date in common format, indicating last modified time of thread
+	comment_count: Number of comments
+	created: Date in common format, creation time of thread
+	group: "game_diplomacy"
+	key: string. Seems to be a unique id for the thread.
+	payload: {
+		body: string. Main message body. Special characters are html-escaped (eg. "&#39;" for "'").
+		from_alias: Player name of sender
+		from_color: Player color of sender, as a html color code
+		subject: Message subject line.
+		to_aliases: string. Player names of players sent to. Multiple names are joined by ','.
+		to_colors: string. Color codes of players sent to, same order as to_aliases. Joined by ','.
+		to_uids: string. Player index of players sent to, same order as to_aliases. Joined by ','.
+	}
+	recipients: [user_id]. contains user_ids of all players that should see message (ie. sender+recievers). Appears sorted into player index order.
+	sender: user_id of sender.
+	status: One of "read", "unread". Indicates if calling player has read the message.
+	tags: []. No other values observed.
+}
+
+
+POST http://triton.ironhelmet.com/grequest/fetch_game_message_comments
+Cookie: ???
+Content-Type: application/x-www-form-urlencoded
+
+Form data:
+	type: fetch_game_message_comments
+	message_key: key of message thread to fetch
+	count: number of comments to fetch
+	offset: for fetching more comments past the first count
+	game_number: GAME_NUMBER
+
+Returns 200, JSON:
+{
+	event: "message:new_comments"
+	report: {
+		message_key: The passed in message key
+		messages: [comment object, from newest to oldest]
+	}
+}
+comment object: {
+	body: string message text. html-escaped.
+	created: Comment creation time in common date format
+	key: The message key for the parent thread (same as passed in from form data)
+	sender: The user_id of the sender
+}
+
+
+POST http://triton.ironhelmet.com/grequest/fetch_game_message_comments
+Cookie: ???
+Content-Type: application/x-www-form-urlencoded
+
+Form data:
+	type: create_game_message_comment
+	message_key: The message key to add the comment to.
+	body: The comment text.
+	game_number: GAME_NUMBER
+
+Returns 200, JSON:
+{
+	event: "message:comment_created"
+}
+
+
