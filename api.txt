@@ -85,6 +85,24 @@ Tech object: {
 	bv: unknown. might be "base value"?
 	brr: number of research points needed to complete current level
 }
+Star object: {
+	n: string. Star name
+	puid: Owning player index. -1 if not owned.
+	uid: Star id. Numeric. First N stars are player homeworlds, in player index order.
+	v: string. Visible flag. "0" if not visible, "1" if visible.
+	x: string float. X coordinate of star
+	y: string float. Y coordinate of star
+	ONLY PRESENT IF STAR IS VISIBLE:
+	c: int. Might be number of carriers.
+	e: Economy present. 0 if unoccupied.
+	g: Garrison value. 0 if unoccupied.
+	ga: ??? Might be "number of filled garrison spots"
+	i: industry present. 0 if unoccupied.
+	nr: Natural resources.
+	r: Total resources (after terraforming)
+	s: Science present. 0 if unoccupied.
+	st: Ships present. 0 if unoccupied.
+}
 
 
 POST http://triton.ironhelmet.com/grequest/fetch_unread_count
@@ -229,3 +247,33 @@ Returns 200, JSON:
 }
 
 
+POST http://triton.ironhelmet.com/grequest/order
+Cookie: ???
+Content-Type: application/x-www-form-urlencoded
+
+Form data:
+	type: order
+	order: add_fleet_path,FLEET_ID,STAR_SPEC
+	game_number: GAME_NUMBER
+
+action:
+	Modifies the given fleet as according to STAR_SPEC
+	STAR_SPEC should be a _ seperated list of star ids,
+	starting with the next one to go to (after the current in-progress leg)
+	and describing the waypoints from there.
+
+	If you wish to set NO path (beyond current destination), instead use:
+		order: clear_fleet_path,FLEET_ID
+
+Other orders:
+	order: set_garrison_all,VALUE
+	Sets all stars garrison
+
+	order: set_garrison,STAR_ID,VALUE
+	Sets a star's garrison
+
+Returns 200, JSON:
+{
+	event: "order:ok"
+	report: {}
+}
