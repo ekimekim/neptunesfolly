@@ -110,6 +110,7 @@ class Fleet(_HasGalaxy, _HasData):
 		'name': 'n',
 		'ships': 'st',
 		'fleet_id': 'uid',
+		'orbiting': 'star',
 	}
 
 	def __init__(self, fleet_id, **kwargs):
@@ -123,6 +124,12 @@ class Fleet(_HasGalaxy, _HasData):
 	@property
 	def player(self):
 		return Player(self.data.puid, galaxy=self.galaxy)
+
+	@property
+	def star(self):
+		if 'ouid' in self.data:
+			return Star(self.data.ouid, galaxy=self.galaxy)
+		return None
 
 	@property
 	def x(self): return float(self.data.x)
@@ -168,8 +175,10 @@ class Star(_HasGalaxy, _HasData):
 	@property
 	def y(self): return float(self.data.y)
 
-	# TODO how do we know if a fleet is on a star? does data.st include orbiting carriers? (prob not)
-	# we should add a total ships including carriers.
+	@property
+	def fleets(self):
+		"""Get all orbiting fleets (reverse lookup)"""
+		return [fleet for fleet in self.galaxy.fleets if fleet.ouid = self.star_id]
 
 	def distance(self, other, as_level=False):
 		"""Return distance to other star.
