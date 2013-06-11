@@ -50,6 +50,7 @@ Fleet object: {
 	st: number of ships in fleet
 	uid: fleet id. int. appears sequential from game start, across all players.
 	w: int. unknown. observed: 0
+	ouid: star id of star fleet is currently orbiting. not present while fleet in transit.
 }
 Player object: {
 	alias: string, player name
@@ -93,7 +94,7 @@ Star object: {
 	x: string float. X coordinate of star
 	y: string float. Y coordinate of star
 	ONLY PRESENT IF STAR IS VISIBLE:
-	c: int. Might be number of carriers.
+	c: int. Might be number of carriers. (edit: It is not. Still 0 when orbiting carrier present)
 	e: Economy present. 0 if unoccupied.
 	g: Garrison value. 0 if unoccupied.
 	ga: ??? Might be "number of filled garrison spots"
