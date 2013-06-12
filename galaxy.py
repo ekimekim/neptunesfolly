@@ -117,13 +117,16 @@ class Fleet(_HasGalaxy, _HasData):
 		'owner': 'player',
 		'name': 'n',
 		'ships': 'st',
-		'fleet_id': 'uid',
 		'orbiting': 'star',
 	}
 
 	def __init__(self, fleet_id, **kwargs):
 		super(Fleet, self).__init__(**kwargs)
-		self.data = self.galaxy.report.fleets[str(fleet_id)]
+		self.fleet_id = fleet_id
+
+	@property
+	def data(self):
+		return self.galaxy.report.fleets[str(self.fleet_id)]
 
 	@property
 	def waypoints(self):
@@ -153,7 +156,6 @@ class Star(_HasGalaxy, _HasData):
 	aliases = {
 		'owner': 'player',
 		'name': 'n',
-		'star_id': 'uid',
 		'economy': 'e',
 		'carriers': 'c',
 		'garrison': 'g',
@@ -167,7 +169,11 @@ class Star(_HasGalaxy, _HasData):
 
 	def __init__(self, star_id, **kwargs):
 		super(Star, self).__init__(**kwargs)
-		self.data = self.galaxy.report.stars[str(star_id)]
+		self.star_id = star_id
+
+	@property
+	def data(self):
+		return self.galaxy.report.stars[str(self.star_id)]
 
 	@property
 	def player(self):
@@ -206,12 +212,15 @@ class Player(_HasGalaxy, _HasData):
 		'industry': 'total_industry',
 		'science': 'total_science',
 		'ships': 'total_strength',
-		'player_id': 'uid',
 	}
 
 	def __init__(self, player_id, **kwargs):
 		super(Player, self).__init__(**kwargs)
-		self.data = self.galaxy.report.players[str(player_id)]
+		self.player_id = player_id
+
+	@property
+	def data(self):
+		return self.galaxy.report.players[str(self.player_id)]
 
 	def __getattr__(self, attr):
 		# Allow tech to be referenced directly from player object
@@ -227,7 +236,7 @@ class Player(_HasGalaxy, _HasData):
 	def tech(self):
 		class TechDict(aliasdict, dotdict):
 			aliases = Tech.TECH_NAME_ALIASES
-		return TechDict({tech_name: Tech(self.data.uid, tech_name, galaxy=self.galaxy)
+		return TechDict({tech_name: Tech(self.player_id, tech_name, galaxy=self.galaxy)
 		                 for tech_name in self.data.tech})
 
 	@property
@@ -264,9 +273,12 @@ class Tech(_HasData, _HasGalaxy):
 		super(Tech, self).__init__(**kwargs)
 		if tech_name in self.TECH_NAME_ALIASES:
 			tech_name = self.TECH_NAME_ALIASES[tech_name]
-		self.data = self.galaxy.report.players[str(player_id)].tech[tech_name]
 		self.player_id = player_id
 		self.name = tech_name
+
+	@property
+	def data(self):
+		return self.galaxy.report.players[str(self.player_id)].tech[self.name]
 
 	@property
 	def player(self):
