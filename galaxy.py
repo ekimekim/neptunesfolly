@@ -21,7 +21,8 @@ class Galaxy(object):
 		return self._report
 
 	def __getattr__(self, attr):
-		return self.report[attr]
+		if attr in self.report: return self.report[attr]
+		if attr in self.players_by_name: return self.players_by_name[attr]
 
 	@property
 	def admin(self):
@@ -50,6 +51,10 @@ class Galaxy(object):
 	@property
 	def players(self):
 		return [Player(int(player_id), galaxy=self) for player_id in sorted(self.report.players, key=int)]
+
+	@property
+	def players_by_name(self):
+		return {player.name: player for player in self.players}
 
 	@property
 	def stars(self):
