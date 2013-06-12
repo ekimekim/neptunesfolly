@@ -3,6 +3,8 @@ import os
 import requests
 from simplejson import loads
 
+from helpers import dotdict
+
 BASE_URL = "http://triton.ironhelmet.com/grequest"
 
 def request(name, cookies=None, **data):
@@ -20,11 +22,3 @@ def decode_json(s):
 	"""This is just a helper method to isolate how we turn a response from JSON into python objects."""
 	return loads(s, object_hook=dotdict)
 
-
-class dotdict(dict):
-	def __getattr__(self, attr):
-		return self[attr]
-	def __setattr__(self, attr, value):
-		self[attr] = value
-	def __delattr__(self, attr):
-		del self[attr]

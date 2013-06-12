@@ -1,6 +1,7 @@
 import math
 
 from request import request
+from helpers import dotdict, aliasdict
 
 
 class Galaxy(object):
@@ -86,6 +87,8 @@ class _HasGalaxy(object):
 			galaxy = kwargs.pop('galaxy')
 
 		self.galaxy = galaxy
+
+		super(_HasGalaxy, self).__init__(*args, **kwargs)
 
 
 class _HasData(object):
@@ -189,4 +192,98 @@ class Star(_HasGalaxy, _HasData):
 		level = math.ceil(dist) - 3
 		if level < 1: level = 1
 		return level
+
+
+class Player(_HasGalaxy, _HasData):
+	aliases = {
+		'name': 'alias',
+		'economy': 'total_economy',
+		'industry': 'total_industry',
+		'science': 'total_science',
+		'ships': 'total_strength',
+		'player_id': 'uid',
+	}
+
+	def __init__(self, player_id, **kwargs):
+		super(Player, self).__init__(**kwargs)
+		self.data = self.galaxy.report.players[player_id]
+
+	@property
+	def conceded(self):
+		return self.data.conceded == 1
+
+	@property
+	def tech(self):
+		class TechDict(aliasdict, dotdict):
+			aliases = Tech.TECH_NAME_ALIASES
+		return TechDict({tech_name: Tech(self.player_id, tech_name, galaxy=self.galaxy)
+		                 for tech_name in self.data.tech})
+
+	@property
+	def stars(self):
+		return [star for star in galaxy.stars if star.data.puid == self.player_id]
+
+	@property
+	def fleets(self):
+		"""Note: RETURNS VISIBLE FLEETS ONLY"""
+		return [fleet for fleet in galaxy.fleets if fleet.data.puid == self.player_id]
+
+	@property
+	def researching(self):
+		return Tech(self.player_id, self.data.researching, galaxy=self.galaxy)
+
+	@property
+	def researching_next(self):
+		return Tech(self.player_id, self.data.researching_next, galaxy=self.galaxy)
+
+
+class Tech(_HasData, _HasGalaxy):
+	aliases = {
+		'current': 'research',
+		'required': 'brr',
+	}
+
+	TECH_NAME_ALIASES = {
+		'experimentation': 'research',
+		'range': 'propulsion',
+		'hyperspace': 'propulsion',
+	}
+
+	def __init__(self, player_id, tech_name, **kwargs):
+		super(Tech, self).__init__(**kwargs)
+		if tech_name in self.TECH_NAME_ALIASES:
+			tech_name = self.TECH_NAME_ALIASES[tech_name]
+		self.data = self.galaxy.report.players[player_id].tech[tech_name]
+		self.player_id = player_id
+		self.name = tech_name
+
+	@property
+	def player(self):
+		return Player(self.player_id, galaxy=self.galaxy)
+
+	@property
+	def remaining(self):
+		return self.required - self.current
+
+	@property
+	def progress:
+		return float(self.current)/self.required
+
+	@property
+	def eta(self):
+		"""Most likely ticks to completion, based on current player science and experimentation level"""
+		player = self.player
+		sci_rate = self.player.science + 4 * self.player.experimentation.level / 7.0
+		return max(0, math.ceil(self.remaining / sci_rate))
+
+	@property
+	def eta_range(self):
+		"""Ticks to completion, based on current player science and experimentation level.
+		Returns (lower bound, upper bound)."""
+		player = self.player
+		min_sci_rate = self.player.science
+		max_sci_rate = self.player.science + 4 * self.player.experimentation.level
+		min_eta = max(0, math.ceil(self.remaining / max_sci_rate))
+		max_eta = max(0, math.ceil(self.remaining / min_sci_rate))
+		return (min_eta, max_eta)
 
