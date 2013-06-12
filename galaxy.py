@@ -23,6 +23,7 @@ class Galaxy(object):
 	def __getattr__(self, attr):
 		if attr in self.report: return self.report[attr]
 		if attr in self.players_by_name: return self.players_by_name[attr]
+		raise AttributeError(attr)
 
 	@property
 	def admin(self):
@@ -109,7 +110,9 @@ class _HasData(object):
 	def __getattr__(self, attr):
 		if attr in self.aliases:
 			return getattr(self, self.aliases[attr])
-		return self.data[attr]
+		if attr in self.data:
+			return self.data[attr]
+		raise AttributeError(attr)
 
 	def __hasattr__(self, attr):
 		if attr in self.aliases:
