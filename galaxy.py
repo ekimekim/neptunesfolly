@@ -249,12 +249,12 @@ class Player(_HasGalaxy, _HasData):
 
 	@property
 	def stars(self):
-		return [star for star in galaxy.stars if star.data.puid == self.player_id]
+		return [star for star in self.galaxy.stars if star.data.puid == self.player_id]
 
 	@property
 	def fleets(self):
 		"""Note: RETURNS VISIBLE FLEETS ONLY"""
-		return [fleet for fleet in galaxy.fleets if fleet.data.puid == self.player_id]
+		return [fleet for fleet in self.galaxy.fleets.values() if fleet.data.puid == self.player_id]
 
 	@property
 	def researching(self):
