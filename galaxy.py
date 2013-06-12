@@ -11,13 +11,13 @@ class Galaxy(object):
 		self.game_number = game_number
 		self.cookies = cookies
 
-	def update_state(self):
-		self._report = request('order', order='full_universe_report', game_number=game_number, cookies=cookies)
+	def update(self):
+		self._report = request('order', order='full_universe_report', game_number=self.game_number, cookies=self.cookies)
 
 	@property
 	def report(self):
 		if not self._report:
-			self.update_state()
+			self.update()
 		return self._report
 
 	def __getattr__(self, attr):
@@ -30,7 +30,7 @@ class Galaxy(object):
 	@property
 	def fleets(self):
 		# We use a dict {id: object} instead of a list [object] because the "list" is sparse - only visible ones present
-		return {fleet_id: Fleet(id, galaxy=self) for fleet_id, fleet_data in self.report.fleets.items()}
+		return {int(fleet_id): Fleet(int(fleet_id), galaxy=self) for fleet_id in self.report.fleets}
 
 	@property
 	def game_state(self):
@@ -49,11 +49,11 @@ class Galaxy(object):
 
 	@property
 	def players(self):
-		return [Player(player_id, galaxy=self) for player_id in range(len(self.report.players))]
+		return [Player(int(player_id), galaxy=self) for player_id in sorted(self.report.players, key=int)]
 
 	@property
 	def stars(self):
-		return [Star(star_id, galaxy=self) for star_id in range(len(self.report.stars))]
+		return [Star(int(star_id), galaxy=self) for star_id in self.report.stars]
 
 	@property
 	def start_time(self):
@@ -102,9 +102,14 @@ class _HasData(object):
 	aliases = {}
 
 	def __getattr__(self, attr):
-		if attr in aliases:
-			return getattr(self, aliases[attr])
+		if attr in self.aliases:
+			return getattr(self, self.aliases[attr])
 		return self.data[attr]
+
+	def __hasattr__(self, attr):
+		if attr in self.aliases:
+			return hasattr(self, self.aliases[attr])
+		return attr in self.data
 
 
 class Fleet(_HasGalaxy, _HasData):
@@ -118,7 +123,7 @@ class Fleet(_HasGalaxy, _HasData):
 
 	def __init__(self, fleet_id, **kwargs):
 		super(Fleet, self).__init__(**kwargs)
-		self.data = self.galaxy.report.fleets[fleet_id]
+		self.data = self.galaxy.report.fleets[str(fleet_id)]
 
 	@property
 	def waypoints(self):
@@ -162,7 +167,7 @@ class Star(_HasGalaxy, _HasData):
 
 	def __init__(self, star_id, **kwargs):
 		super(Star, self).__init__(**kwargs)
-		self.data = self.galaxy.report.stars[star_id]
+		self.data = self.galaxy.report.stars[str(star_id)]
 
 	@property
 	def player(self):
@@ -181,7 +186,7 @@ class Star(_HasGalaxy, _HasData):
 	@property
 	def fleets(self):
 		"""Get all orbiting fleets (reverse lookup)"""
-		return [fleet for fleet in self.galaxy.fleets if fleet.ouid = self.star_id]
+		return [fleet for fleet in self.galaxy.fleets if fleet.ouid == self.star_id]
 
 	def distance(self, other, as_level=False):
 		"""Return distance to other star.
@@ -206,7 +211,13 @@ class Player(_HasGalaxy, _HasData):
 
 	def __init__(self, player_id, **kwargs):
 		super(Player, self).__init__(**kwargs)
-		self.data = self.galaxy.report.players[player_id]
+		self.data = self.galaxy.report.players[str(player_id)]
+
+	def __getattr__(self, attr):
+		# Allow tech to be referenced directly from player object
+		if attr in self.tech:
+			return self.tech[attr]
+		return super(Player, self).__getattr__(attr)
 
 	@property
 	def conceded(self):
@@ -216,7 +227,7 @@ class Player(_HasGalaxy, _HasData):
 	def tech(self):
 		class TechDict(aliasdict, dotdict):
 			aliases = Tech.TECH_NAME_ALIASES
-		return TechDict({tech_name: Tech(self.player_id, tech_name, galaxy=self.galaxy)
+		return TechDict({tech_name: Tech(self.data.uid, tech_name, galaxy=self.galaxy)
 		                 for tech_name in self.data.tech})
 
 	@property
@@ -253,7 +264,7 @@ class Tech(_HasData, _HasGalaxy):
 		super(Tech, self).__init__(**kwargs)
 		if tech_name in self.TECH_NAME_ALIASES:
 			tech_name = self.TECH_NAME_ALIASES[tech_name]
-		self.data = self.galaxy.report.players[player_id].tech[tech_name]
+		self.data = self.galaxy.report.players[str(player_id)].tech[tech_name]
 		self.player_id = player_id
 		self.name = tech_name
 
@@ -266,7 +277,7 @@ class Tech(_HasData, _HasGalaxy):
 		return self.required - self.current
 
 	@property
-	def progress:
+	def progress(self):
 		return float(self.current)/self.required
 
 	@property
@@ -274,7 +285,7 @@ class Tech(_HasData, _HasGalaxy):
 		"""Most likely ticks to completion, based on current player science and experimentation level"""
 		player = self.player
 		sci_rate = self.player.science + 4 * self.player.experimentation.level / 7.0
-		return max(0, math.ceil(self.remaining / sci_rate))
+		return max(0, int(math.ceil(self.remaining / sci_rate)))
 
 	@property
 	def eta_range(self):
@@ -283,7 +294,13 @@ class Tech(_HasData, _HasGalaxy):
 		player = self.player
 		min_sci_rate = self.player.science
 		max_sci_rate = self.player.science + 4 * self.player.experimentation.level
-		min_eta = max(0, math.ceil(self.remaining / max_sci_rate))
-		max_eta = max(0, math.ceil(self.remaining / min_sci_rate))
+		min_eta = max(0, int(math.ceil(self.remaining / max_sci_rate)))
+		max_eta = max(0, int(math.ceil(self.remaining / min_sci_rate)))
 		return (min_eta, max_eta)
 
+	@property
+	def eta_details(self):
+		"""Ticks to completion, based on current player science and experimentation level.
+		Returns a dict {ticks: chance}, ie. mapping from potential completion time in ticks
+		to the probability that it will complete at that time."""
+		raise NotImplementedError # TODO proper freq distribution
