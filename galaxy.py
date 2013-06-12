@@ -264,6 +264,11 @@ class Player(_HasGalaxy, _HasData):
 	def researching_next(self):
 		return Tech(self.player_id, self.data.researching_next, galaxy=self.galaxy)
 
+	@property
+	def ship_rate(self):
+		"""New ships per tick"""
+		return self.industry * (self.manufacturing.level + 5) / 24.0
+
 
 class Tech(_HasData, _HasGalaxy):
 	aliases = {
