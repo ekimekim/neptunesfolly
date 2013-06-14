@@ -59,7 +59,7 @@ class Galaxy(object):
 
 	@property
 	def stars(self):
-		return [Star(int(star_id), galaxy=self) for star_id in self.report.stars]
+		return [Star(int(star_id), galaxy=self) for star_id in sorted(self.report.stars)]
 
 	@property
 	def start_time(self):
