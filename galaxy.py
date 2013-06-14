@@ -273,7 +273,6 @@ class Player(_HasGalaxy, _HasData):
 class Tech(_HasData, _HasGalaxy):
 	aliases = {
 		'current': 'research',
-		'basecost': 'brr',
 	}
 
 	TECH_NAME_ALIASES = {
@@ -296,6 +295,14 @@ class Tech(_HasData, _HasGalaxy):
 	@property
 	def player(self):
 		return Player(self.player_id, galaxy=self.galaxy)
+
+	@property
+	def basecost(self):
+		try:
+			return self.brr
+		except AttributeError:
+			# brr is only available for calling player's tech, but is the same across all tech of same type
+			return Tech(self.galaxy.player_uid, self.tech_name, galaxy=self.galaxy).basecost
 
 	@property
 	def required(self):
