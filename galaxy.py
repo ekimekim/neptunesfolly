@@ -273,7 +273,7 @@ class Player(_HasGalaxy, _HasData):
 class Tech(_HasData, _HasGalaxy):
 	aliases = {
 		'current': 'research',
-		'required': 'brr',
+		'basecost': 'brr',
 	}
 
 	TECH_NAME_ALIASES = {
@@ -296,6 +296,10 @@ class Tech(_HasData, _HasGalaxy):
 	@property
 	def player(self):
 		return Player(self.player_id, galaxy=self.galaxy)
+
+	@property
+	def required(self):
+		return self.level * self.basecost
 
 	@property
 	def remaining(self):

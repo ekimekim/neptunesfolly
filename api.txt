@@ -84,7 +84,7 @@ Tech object: {
 	sv: unknown
 	research: current number of research points in this tech
 	bv: unknown. might be "base value"?
-	brr: number of research points needed to complete current level
+	brr: number of research points needed to complete FIRST level. Actual points required = level * brr
 }
 Star object: {
 	n: string. Star name
