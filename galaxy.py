@@ -330,8 +330,8 @@ class Tech(_HasData, _HasGalaxy):
 		player = self.player
 		min_sci_rate = self.player.science
 		max_sci_rate = self.player.science + 4 * self.player.experimentation.level
-		min_eta = max(0, int(math.ceil(self.remaining / max_sci_rate)))
-		max_eta = max(0, int(math.ceil(self.remaining / min_sci_rate)))
+		min_eta = max(0, int(math.ceil(float(self.remaining) / max_sci_rate)))
+		max_eta = max(0, int(math.ceil(float(self.remaining) / min_sci_rate)))
 		return (min_eta, max_eta)
 
 	@property
