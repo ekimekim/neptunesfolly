@@ -55,7 +55,7 @@ Fleet object: {
 Player object: {
 	alias: string, player name
 	avatar: int, identifies player avatar image
-	conceded: assumed 0 for normal player, 1 for conceded player.
+	conceded: int. observed: 0 (normal), 2 (AFK)
 	huid: int. seems to be uid + 1. might mean "human uid" ?
 	karma_to_give: int. karma points not already given.
 	missed_turns: int. only observed so far as 0, may be related to turn-based games or to marking of AFK.
@@ -65,7 +65,7 @@ Player object: {
 	total_fleets: as expected.
 	total_industry: as expected.
 	total_science: as expected.
-	total_stars: as expected.
+	total_stars: as expected. conceded players have 0 for this value.
 	total_strength: total ships.
 	uid: player index.
 	user_id: string. observed to be 21 characters and numeric, this seems to be a true unique id for a user.
