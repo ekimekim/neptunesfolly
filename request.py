@@ -7,7 +7,7 @@ from helpers import dotdict
 
 BASE_URL = "http://triton.ironhelmet.com/grequest"
 
-def request(name, cookies=None, **data):
+def request(name, cookies=None, json=True, **data):
 	"""Do a request with given name and form data."""
 
 	url = os.path.join(BASE_URL, name)
@@ -15,6 +15,7 @@ def request(name, cookies=None, **data):
 
 	resp = requests.post(url, data=data, cookies=cookies)
 	resp.raise_for_status()
+	if not json: return resp.text
 	resp_obj = decode_json(resp.text)
 	report = resp_obj.get('report', None)
 
