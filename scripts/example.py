@@ -1,10 +1,6 @@
 
-cookies = open('/home/mike/.npcookie').read().strip()
-cookies = dict(part.strip().split('=',1) for part in cookies.split(';'))
-game_number = 5895296
-
-from galaxy import *
-galaxy = Galaxy(game_number, cookies)
+from galaxy import Galaxy
+galaxy = Galaxy()
 
 FORMAT = (
 	'{namestr:{width}}  {0.economy}/{0.industry}/{0.science} ships:{0.ships}+{0.ship_rate:.2f}/tick '
