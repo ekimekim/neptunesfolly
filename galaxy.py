@@ -1,13 +1,13 @@
 import math
 
-from request import request
+from request import request, USE_DEFAULT
 from helpers import dotdict, aliasdict
 
 
 class Galaxy(object):
 	_report = None
 
-	def __init__(self, game_number, cookies):
+	def __init__(self, game_number=USE_DEFAULT, cookies=USE_DEFAULT):
 		self.game_number = game_number
 		self.cookies = cookies
 

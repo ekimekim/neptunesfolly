@@ -7,11 +7,28 @@ from helpers import dotdict
 
 BASE_URL = "http://5.tritonsrage.appspot.com/grequest"
 
-def request(name, cookies=None, json=True, **data):
+USE_DEFAULT = object() # we use object() to get a unique constant
+DEFAULT_COOKIE_PATH = "~/.npcookie"
+default_cookies = None
+
+def request(name, cookies=USE_DEFAULT, game_number=USE_DEFAULT, json=True, **data):
 	"""Do a request with given name and form data."""
+
+	if cookies == USE_DEFAULT:
+		global default_cookies
+		if not default_cookies:
+			with open(os.path.expanduser(DEFAULT_COOKIE_PATH)) as f:
+				default_cookies = parse_cookies(f.read().strip())
+		cookies = default_cookies
+	elif isinstance(cookies, basestring):
+		cookies = parse_cookies(cookies)
+
+	if game_number == USE_DEFAULT:
+		game_number = os.environ['NP_GAME_NUMBER']
 
 	url = os.path.join(BASE_URL, name)
 	data['type'] = name
+	if game_number: data['game_number'] = game_number
 
 	resp = requests.post(url, data=data, cookies=cookies)
 	resp.raise_for_status()
@@ -27,6 +44,9 @@ def request(name, cookies=None, json=True, **data):
 def decode_json(s):
 	"""This is just a helper method to isolate how we turn a response from JSON into python objects."""
 	return loads(s, object_hook=dotdict)
+
+def parse_cookies(s):
+	return dict(part.strip().split('=',1) for part in s.split(';'))
 
 class RequestError(Exception):
 	pass
