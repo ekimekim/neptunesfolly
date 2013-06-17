@@ -1,7 +1,10 @@
 import os
 
 import requests
-from simplejson import loads
+try:
+	from simplejson import loads
+except ImportError:
+	from json import loads
 
 from helpers import dotdict
 

@@ -1,5 +1,6 @@
+#!/bin/env python
 
-from galaxy import *
+from folly import Galaxy
 galaxy = Galaxy()
 
 width = max(len(name) for name in galaxy.players_by_name)

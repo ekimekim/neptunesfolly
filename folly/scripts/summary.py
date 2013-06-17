@@ -1,5 +1,6 @@
+#!/bin/env python
 
-from galaxy import Galaxy
+from folly import Galaxy
 galaxy = Galaxy()
 
 FORMAT = (

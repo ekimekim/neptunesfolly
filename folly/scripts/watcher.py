@@ -1,10 +1,10 @@
+#!/bin/env python
 
 import time
 import sys
 
-from galaxy import Galaxy
-from config import game_number, cookies
-from request import RequestError
+from folly import Galaxy
+from folly.request import RequestError
 
 old_galaxy = None
 while True:
