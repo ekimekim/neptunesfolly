@@ -46,6 +46,18 @@ while True:
 					old_tech = old_player.tech[tech_name]
 					if tech.level != old_tech.level:
 						print "{player.name} upgraded {tech.name} tech {old_tech.level} -> {tech.level}".format(player=player, old_tech=old_tech, tech=tech)
+
+			# core stat changes
+			for player, old_player in zip(galaxy.players, old_galaxy.players):
+				for attr in ('economy', 'industry', 'science', 'total_fleets'):
+					oldval = getattr(old_player, attr)
+					newval = getattr(player, attr)
+					attrname = 'fleets' if attr == 'total_fleets' else attr
+					if oldval > newval:
+						print "{player.name} has lost {loss} {attr}".format(player=player, attr=attrname, loss=oldval-newval)
+					elif newval > oldval:
+						print "{player.name} has gained {gain} {attr}".format(player=player, attr=attrname, gain=newval-oldval)
+
 		else:
 			print "No previous data."
 
