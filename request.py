@@ -5,7 +5,7 @@ from simplejson import loads
 
 from helpers import dotdict
 
-BASE_URL = "http://triton.ironhelmet.com/grequest"
+BASE_URL = "http://5.tritonsrage.appspot.com/grequest"
 
 def request(name, cookies=None, json=True, **data):
 	"""Do a request with given name and form data."""
