@@ -5,6 +5,7 @@ import sys
 
 from folly import Galaxy
 from folly.request import RequestError
+import folly.request
 
 old_galaxy = None
 while True:
@@ -13,6 +14,7 @@ while True:
 		galaxy.update()
 	except RequestError, ex:
 		print "ERROR: Could not update:", ex
+		folly.request.default_cookies = None # clear cached cookie, it's wrong
 		if old_galaxy:
 			print "Next update will track changes from tick {}".format(old_galaxy.tick)
 	else:
@@ -61,10 +63,11 @@ while True:
 		else:
 			print "No previous data."
 
+		old_galaxy = galaxy
+
 	try:
 		time.sleep(3600)
 	except KeyboardInterrupt:
 		if raw_input("forced refresh. exit? ").startswith('y'):
 			sys.exit(0)
-	old_galaxy = galaxy
 	print
