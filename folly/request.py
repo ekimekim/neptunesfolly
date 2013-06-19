@@ -14,7 +14,7 @@ USE_DEFAULT = object() # we use object() to get a unique constant
 DEFAULT_COOKIE_PATH = "~/.npcookie"
 default_cookies = None
 
-def request(name, cookies=USE_DEFAULT, game_number=USE_DEFAULT, json=True, **data):
+def request(name, cookies=USE_DEFAULT, game_number=USE_DEFAULT, json=True, extra_opts={}, **data):
 	"""Do a request with given name and form data."""
 
 	if cookies == USE_DEFAULT:
@@ -33,7 +33,7 @@ def request(name, cookies=USE_DEFAULT, game_number=USE_DEFAULT, json=True, **dat
 	data['type'] = name
 	if game_number: data['game_number'] = game_number
 
-	resp = requests.post(url, data=data, cookies=cookies)
+	resp = requests.post(url, data=data, cookies=cookies, **extra_opts)
 	resp.raise_for_status()
 	if not json: return resp.text
 	resp_obj = decode_json(resp.text)

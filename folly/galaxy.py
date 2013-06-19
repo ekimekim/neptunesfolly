@@ -7,12 +7,13 @@ from helpers import dotdict, aliasdict
 class Galaxy(object):
 	_report = None
 
-	def __init__(self, game_number=USE_DEFAULT, cookies=USE_DEFAULT):
+	def __init__(self, game_number=USE_DEFAULT, cookies=USE_DEFAULT, **request_opts):
 		self.game_number = game_number
 		self.cookies = cookies
+		self.request_opts = request_opts
 
 	def update(self):
-		self._report = request('order', order='full_universe_report', game_number=self.game_number, cookies=self.cookies)
+		self._report = request('order', order='full_universe_report', game_number=self.game_number, cookies=self.cookies, extra_opts=self.request_opts)
 
 	@property
 	def report(self):
