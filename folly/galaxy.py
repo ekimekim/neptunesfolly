@@ -139,7 +139,7 @@ class Fleet(_HasGalaxy, _HasData):
 
 	@property
 	def waypoints(self):
-		return [Star(star_id, galaxy=self.galaxy) for star in self.data.p]
+		return [Star(star_id, galaxy=self.galaxy) for star_id in self.data.p]
 
 	@property
 	def player(self):
