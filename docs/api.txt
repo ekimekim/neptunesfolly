@@ -56,7 +56,7 @@ Fleet object: {
 Player object: {
 	alias: string, player name
 	avatar: int, identifies player avatar image
-	conceded: int. observed: 0 (normal), 2 (AFK)
+	conceded: int. observed: 0 (normal), 2 (AFK), 3 (KO)
 	huid: int. seems to be uid + 1. might mean "human uid" ?
 	karma_to_give: int. karma points not already given.
 	missed_turns: int. only observed so far as 0, may be related to turn-based games or to marking of AFK.

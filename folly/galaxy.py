@@ -253,8 +253,13 @@ class Player(_HasGalaxy, _HasData):
 		return super(Player, self).__getattr__(attr)
 
 	@property
-	def conceded(self):
-		return self.data.conceded == 1
+	def state(self):
+		return {
+			0: 'active',
+			1: 'quit', # <-- guessing
+			2: 'afk',
+			3: 'ko',
+		}.get(self.data.conceded, 'unknown')
 
 	@property
 	def tech(self):
