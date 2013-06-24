@@ -42,6 +42,8 @@ class Galaxy(object):
 		for key in set(self._report.keys()) - EXCLUDE:
 			if self._report[key] != other._report[key]: return False
 		return True
+	def __ne__(self, other):
+		return not self == other
 
 	@property
 	def admin(self):
@@ -140,6 +142,8 @@ class _HasData(object):
 	def __eq__(self, other):
 		if type(self) != type(other): return False
 		return self.data == other.data
+	def __ne__(self, other):
+		return not self == other
 
 
 class _HasName(object):
