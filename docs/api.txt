@@ -13,7 +13,7 @@ Returns 200, JSON:
 	event: "order:full_universe",
 	report: {
 		admin: player index of game admin
-		fleet_speed: float ??? (invariant?)
+		fleet_speed: float, invariant. Ship movement speed in units/hr
 		fleets: {fleet_id: fleet object} (visible fleets only)
 		game_over: int (observed: 0 for running game. assumed: 1 for finished game)
 		name: string game name
@@ -40,10 +40,11 @@ Returns 200, JSON:
 	}
 }
 Fleet object: {
-	lx: string float. unknown. similar but different value to x.
-	ly: string float. unknown. similar but different value to y.
-	x: string float. unknown.
-	y: string float. unknown.
+	lx: string float. Describes a point behind the ship (assume always 1ly behind?),
+	    indicating direction of travel. If not travelling, equal to current position.
+	ly: string float. See lx.
+	x: string float. Current x coordinate.
+	y: string float. Current y coordinate.
 	n: string. fleet name.
 	p: list of star ids, describing planned path.
 	puid: player index of owner.
@@ -104,6 +105,8 @@ Star object: {
 	s: Science present. 0 if unoccupied.
 	st: Ships present. 0 if unoccupied.
 }
+A note on coordinates:
+	All coordinates are based on the galaxy map, with unknown origin, and unknown units.
 
 
 POST http://triton.ironhelmet.com/grequest/fetch_unread_count

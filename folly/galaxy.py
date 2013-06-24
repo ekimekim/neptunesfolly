@@ -152,6 +152,21 @@ class Fleet(_HasGalaxy, _HasData):
 		return None
 
 	@property
+	def eta(self):
+		"""Reports number of ticks until fleet reaches each destination in waypoint list.
+		Returns a list of integers in the same order as waypoints.
+		eg. You could map stars to the fleet's eta with dict(zip(fleet.waypoints, fleet.eta))
+		"""
+		result = []
+		time = 0
+		position = self
+		for star in self.waypoints:
+			time += int(math.ceil(star.distance(position) / self.galaxy.fleet_speed))
+			position = star
+			result.append(time)
+		return result
+
+	@property
 	def x(self): return float(self.data.x)
 	@property
 	def y(self): return float(self.data.y)
