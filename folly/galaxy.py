@@ -248,7 +248,7 @@ class Star(_HasGalaxy, _HasData, _HasName):
 	@property
 	def fleets(self):
 		"""Get all orbiting fleets (reverse lookup)"""
-		return [fleet for fleet in self.galaxy.fleets if fleet.ouid == self.star_id]
+		return [fleet for fleet in self.galaxy.fleets.values() if 'ouid' in fleet.data and fleet.ouid == self.star_id]
 
 	def distance(self, other, as_level=False):
 		"""Return distance to other star.
