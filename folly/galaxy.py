@@ -26,6 +26,23 @@ class Galaxy(object):
 		if attr in self.players_by_name: return self.players_by_name[attr]
 		raise AttributeError(attr)
 
+	def __str__(self):
+		subpart = "{self.player.name} at {self.now}".format(self=self) if self._report else '???'
+		game_number = 'default' if self.game_number is USE_DEFAULT else self.game_number
+		return "<Galaxy {game_number}:{subpart}>".format(game_number=game_number, subpart=subpart)
+
+	def __repr__(self):
+		return str(self)
+
+	def __eq__(self, other):
+		if type(self) != type(other): return False
+		if self.game_number != other.game_number: return False
+		if not self._report: return other._report is None
+		EXCLUDE = {'now', 'tick_fragment'}
+		for key in set(self._report.keys()) - EXCLUDE:
+			if self._report[key] != other._report[key]: return False
+		return True
+
 	@property
 	def admin(self):
 		return self.players[self.report.admin]
@@ -120,8 +137,23 @@ class _HasData(object):
 			return hasattr(self, self.aliases[attr])
 		return attr in self.data
 
+	def __eq__(self, other):
+		if type(self) != type(other): return False
+		return self.data == other.data
 
-class Fleet(_HasGalaxy, _HasData):
+
+class _HasName(object):
+	"""Base class for game objects that are described / uniquely identified by name.
+	Name is expected to be self.name
+	All this class does is provide a shared str() method."""
+
+	def __str__(self):
+		return "<{cls.__name__} {self.name!r}>".format(self=self, cls=type(self))
+	def __repr__(self):
+		return str(self)
+
+
+class Fleet(_HasGalaxy, _HasData, _HasName):
 	aliases = {
 		'owner': 'player',
 		'name': 'n',
@@ -176,7 +208,7 @@ class Fleet(_HasGalaxy, _HasData):
 	def ly(self): return float(self.data.ly)
 
 
-class Star(_HasGalaxy, _HasData):
+class Star(_HasGalaxy, _HasData, _HasName):
 	aliases = {
 		'owner': 'player',
 		'name': 'n',
@@ -229,7 +261,7 @@ class Star(_HasGalaxy, _HasData):
 		return level
 
 
-class Player(_HasGalaxy, _HasData):
+class Player(_HasGalaxy, _HasData, _HasName):
 	aliases = {
 		'name': 'alias',
 		'economy': 'total_economy',
@@ -291,7 +323,7 @@ class Player(_HasGalaxy, _HasData):
 		return self.industry * (self.manufacturing.level + 5) / 24.0
 
 
-class Tech(_HasData, _HasGalaxy):
+class Tech(_HasData, _HasGalaxy, _HasName):
 	aliases = {
 		'current': 'research',
 	}
