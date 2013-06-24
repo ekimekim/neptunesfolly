@@ -123,8 +123,8 @@ def simple((def_WS, def_n), (att_WS, att_n)):
 	It returns (def_won, remaining) where def_won is true if defender won, else false,
 	and remaining is the number of remaining ships on the winning side.
 	"""
-	att_left = att_n - int(math.ceil(def_n/att_WS)) * (def_WS + 1)
-	def_left = def_n - (int(math.ceil(att_n/(def_WS+1))) - 1) * att_WS
+	att_left = att_n - int(math.ceil(float(def_n)/att_WS)) * (def_WS + 1)
+	def_left = def_n - (int(math.ceil(float(att_n)/(def_WS+1))) - 1) * att_WS
 	if def_left > 0:
 		return True, def_left
 	else:
