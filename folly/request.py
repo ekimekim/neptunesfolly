@@ -35,7 +35,7 @@ def request(name, cookies=USE_DEFAULT, game_number=USE_DEFAULT, json=True, extra
 		game_number = os.environ['NP_GAME_NUMBER']
 
 	url = urljoin(BASE_URL, name)
-	data['type'] = name
+	data.setdefault('type', name)
 	if game_number: data['game_number'] = game_number
 
 	resp = requests.post(url, data=data, cookies=cookies, **extra_opts)
