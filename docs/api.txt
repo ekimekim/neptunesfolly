@@ -207,13 +207,18 @@ Returns 200, JSON:
 Common date format:
 	Like "Jun 11 2013 12:50:32 GMT+0000"
 	Seems it's always in GMT+0000
-message object (only diplomacy message observed): {
+message object: {
 	activity: Date in common format, indicating last modified time of thread
-	comment_count: Number of comments
+	comment_count: Number of comments. 0 for events, which don't have comments.
 	created: Date in common format, creation time of thread
 	group: "game_diplomacy"
 	key: string. Seems to be a unique id for the thread.
 	payload: {
+		FOR EVENTS:
+		tick: The tick in which the event occurred.
+		template: String name of event type, eg. combat, shared_technology
+		other values, depending on template.
+		FOR DIPLOMACY MESSAGES:
 		body: string. Main message body. Special characters are html-escaped (eg. "&#39;" for "'").
 		from_alias: Player name of sender
 		from_color: Player color of sender, as a html color code
@@ -222,8 +227,8 @@ message object (only diplomacy message observed): {
 		to_colors: string. Color codes of players sent to, same order as to_aliases. Joined by ','.
 		to_uids: string. Player index of players sent to, same order as to_aliases. Joined by ','.
 	}
-	recipients: [user_id]. contains user_ids of all players that should see message (ie. sender+recievers). Appears sorted into player index order.
-	sender: user_id of sender.
+	recipients: [user_id]. contains user_ids of all players that should see message. Appears sorted into player index order.
+	sender: user_id of sender, or 'game' for events.
 	status: One of "read", "unread". Indicates if calling player has read the message.
 	tags: []. No other values observed.
 }
