@@ -1,4 +1,5 @@
 import os
+from posixpath import join as urljoin
 
 import requests
 try:
@@ -29,7 +30,7 @@ def request(name, cookies=USE_DEFAULT, game_number=USE_DEFAULT, json=True, extra
 	if game_number == USE_DEFAULT:
 		game_number = os.environ['NP_GAME_NUMBER']
 
-	url = os.path.join(BASE_URL, name)
+	url = urljoin(BASE_URL, name)
 	data['type'] = name
 	if game_number: data['game_number'] = game_number
 
