@@ -16,7 +16,8 @@ class dotdict(dict):
 
 
 class aliasdict(dict):
-	"""aliases attribute specifies names that elements can be asscessed with,
+	"""subclass of dict.
+	aliases attribute specifies names that elements can be accessed with,
 	but which do not show up in keys() or by iterating.
 	Useful to make an alias name without it "being there twice" on search."""
 
