@@ -29,3 +29,32 @@ class aliasdict(dict):
 	def __contains__(self, item):
 		if item in self.aliases: return self.aliases[item] in self
 		return super(aliasdict, self).__contains__(item)
+
+
+class _HasData(object):
+	"""A base class for classes that have a block of response data they draw information from.
+	It assumes this data is stored in self.data by init.
+	It defines a getattr to search it, and further, points any names given in self.aliases to other attrs.
+	self.aliases should have form: {'key': 'key_to_use_instead'}
+	For example, to make self.name return self.n, you would set self.aliases = {'name': 'n'}
+	"""
+	data = {}
+	aliases = {}
+
+	def __getattr__(self, attr):
+		if attr in self.aliases:
+			return getattr(self, self.aliases[attr])
+		if attr in self.data:
+			return self.data[attr]
+		raise AttributeError(attr)
+
+	def __hasattr__(self, attr):
+		if attr in self.aliases:
+			return hasattr(self, self.aliases[attr])
+		return attr in self.data
+
+	def __eq__(self, other):
+		if type(self) != type(other): return False
+		return self.data == other.data
+	def __ne__(self, other):
+		return not self == other

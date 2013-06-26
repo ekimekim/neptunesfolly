@@ -1,35 +1,31 @@
 import math
 
 from request import request, USE_DEFAULT
-from helpers import dotdict, aliasdict
+from helpers import dotdict, aliasdict, _HasData
 
 
-class Galaxy(object):
-	_report = None
+class Galaxy(_HasData):
 
 	def __init__(self, game_number=USE_DEFAULT, cookies=USE_DEFAULT, **request_opts):
 		self.game_number = game_number
 		self.cookies = cookies
 		self.request_opts = request_opts
+		self.update()
 
 	def update(self):
-		self._report = request('order', order='full_universe_report', game_number=self.game_number, cookies=self.cookies, extra_opts=self.request_opts)
-
-	@property
-	def report(self):
-		if not self._report:
-			self.update()
-		return self._report
+		self.data = request('order', order='full_universe_report', game_number=self.game_number, cookies=self.cookies, extra_opts=self.request_opts)
 
 	def __getattr__(self, attr):
-		if attr in self.report: return self.report[attr]
+		try:
+			return super(Galaxy, self).__getattr__(attr)
+		except AttributeError:
+			pass
 		if attr in self.players_by_name: return self.players_by_name[attr]
 		raise AttributeError(attr)
 
 	def __str__(self):
-		subpart = "{self.player.name} at {self.now}".format(self=self) if self._report else '???'
 		game_number = 'default' if self.game_number is USE_DEFAULT else self.game_number
-		return "<Galaxy {game_number}:{subpart}>".format(game_number=game_number, subpart=subpart)
+		return "<Galaxy {game_number}:{self.player.name} at {self.now}>".format(game_number=game_number, self=self)
 
 	def __repr__(self):
 		return str(self)
@@ -37,41 +33,40 @@ class Galaxy(object):
 	def __eq__(self, other):
 		if type(self) != type(other): return False
 		if self.game_number != other.game_number: return False
-		if not self._report: return other._report is None
 		EXCLUDE = {'now', 'tick_fragment'}
-		for key in set(self._report.keys()) - EXCLUDE:
-			if self._report[key] != other._report[key]: return False
+		for key in set(self.data.keys()) - EXCLUDE:
+			if self.data[key] != other.data[key]: return False
 		return True
 	def __ne__(self, other):
 		return not self == other
 
 	@property
 	def admin(self):
-		return self.players[self.report.admin]
+		return self.players[self.data.admin]
 
 	@property
 	def fleets(self):
 		# We use a dict {id: object} instead of a list [object] because the "list" is sparse - only visible ones present
-		return {int(fleet_id): Fleet(int(fleet_id), galaxy=self) for fleet_id in self.report.fleets}
+		return {int(fleet_id): Fleet(int(fleet_id), galaxy=self) for fleet_id in self.data.fleets}
 
 	@property
 	def game_state(self):
-		if self.report.game_over: return 'finished'
-		if not self.report.started: return 'not started'
-		if self.report.paused: return 'paused'
+		if self.data.game_over: return 'finished'
+		if not self.data.started: return 'not started'
+		if self.data.paused: return 'paused'
 		return 'running'
 
 	@property
 	def now(self):
-		return self.report.now / 1000.0 # epoch time
+		return self.data.now / 1000.0 # epoch time
 
 	@property
 	def player(self):
-		return self.players[self.report.player_uid]
+		return self.players[self.data.player_uid]
 
 	@property
 	def players(self):
-		return [Player(int(player_id), galaxy=self) for player_id in sorted(self.report.players, key=int)]
+		return [Player(int(player_id), galaxy=self) for player_id in sorted(self.data.players, key=int)]
 
 	@property
 	def players_by_name(self):
@@ -79,15 +74,15 @@ class Galaxy(object):
 
 	@property
 	def stars(self):
-		return [Star(int(star_id), galaxy=self) for star_id in sorted(self.report.stars)]
+		return [Star(int(star_id), galaxy=self) for star_id in sorted(self.data.stars)]
 
 	@property
 	def start_time(self):
-		return self.report.start_time / 1000.0 # epoch time
+		return self.data.start_time / 1000.0 # epoch time
 
 	@property
 	def turn_based(self):
-		return self.report.turn_based == 1
+		return self.data.turn_based == 1
 
 
 class _HasGalaxy(object):
@@ -117,35 +112,6 @@ class _HasGalaxy(object):
 		super(_HasGalaxy, self).__init__(*args, **kwargs)
 
 
-class _HasData(object):
-	"""A base class for classes that have a block of response data they draw information from.
-	It assumes this data is stored in self.data by init.
-	It defines a getattr to search it, and further, points any names given in self.aliases to other attrs.
-	self.aliases should have form: {'key': 'key_to_use_instead'}
-	For example, to make self.name return self.n, you would set self.aliases = {'name': 'n'}
-	"""
-	data = {}
-	aliases = {}
-
-	def __getattr__(self, attr):
-		if attr in self.aliases:
-			return getattr(self, self.aliases[attr])
-		if attr in self.data:
-			return self.data[attr]
-		raise AttributeError(attr)
-
-	def __hasattr__(self, attr):
-		if attr in self.aliases:
-			return hasattr(self, self.aliases[attr])
-		return attr in self.data
-
-	def __eq__(self, other):
-		if type(self) != type(other): return False
-		return self.data == other.data
-	def __ne__(self, other):
-		return not self == other
-
-
 class _HasName(object):
 	"""Base class for game objects that are described / uniquely identified by name.
 	Name is expected to be self.name
@@ -171,7 +137,7 @@ class Fleet(_HasGalaxy, _HasData, _HasName):
 
 	@property
 	def data(self):
-		return self.galaxy.report.fleets[str(self.fleet_id)]
+		return self.galaxy.data.fleets[str(self.fleet_id)]
 
 	@property
 	def waypoints(self):
@@ -233,7 +199,7 @@ class Star(_HasGalaxy, _HasData, _HasName):
 
 	@property
 	def data(self):
-		return self.galaxy.report.stars[str(self.star_id)]
+		return self.galaxy.data.stars[str(self.star_id)]
 
 	@property
 	def player(self):
@@ -280,7 +246,7 @@ class Player(_HasGalaxy, _HasData, _HasName):
 
 	@property
 	def data(self):
-		return self.galaxy.report.players[str(self.player_id)]
+		return self.galaxy.data.players[str(self.player_id)]
 
 	def __getattr__(self, attr):
 		# Allow tech to be referenced directly from player object
@@ -347,7 +313,7 @@ class Tech(_HasData, _HasGalaxy, _HasName):
 
 	@property
 	def data(self):
-		return self.galaxy.report.players[str(self.player_id)].tech[self.name]
+		return self.galaxy.data.players[str(self.player_id)].tech[self.name]
 
 	@property
 	def player(self):
