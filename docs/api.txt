@@ -29,6 +29,7 @@ Returns 200, JSON:
 		start_time: int, believed to be game start time in epoch time in milliseconds
 		started: bool. assumed to be true for started games, else false
 		starting_bonus: int, invariant. Cash bonus joining player gets per player already joined.
+			Is gone - presumedly because other stars are invisible until player joins.
 		tick: int. assumed to be tick number, ie. the number of completed ticks since game start.
 		tick_fragment: int. ???. Might be number of minutes currently through tick.
 		tick_rate: int. assumed to be invariant, minutes per tick
@@ -36,7 +37,7 @@ Returns 200, JSON:
 		trade_cost: int. assumed to be cash cost per tech level in tech trades
 		turn_based: int. assumed invariant, observed: 0. assumed: 1 for turn-based games.
 		turn_based_time_out: int. assumed to be hours (or minutes?) time out in a turn-based game.
-		war: int. unknown.
+		war: int. unknown. observed: 0
 	}
 }
 Fleet object: {
