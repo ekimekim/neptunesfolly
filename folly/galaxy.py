@@ -343,27 +343,40 @@ class Tech(_HasData, _HasGalaxy, _HasName):
 
 	@property
 	def eta(self):
-		"""Most likely ticks to completion, based on current player science and experimentation level"""
-		# TODO values changed - experimentation is now (value*72pts)/24hrs
-		player = self.player
-		sci_rate = self.player.science + 4 * self.player.experimentation.level / 7.0
-		return max(0, int(math.ceil(self.remaining / sci_rate)))
+		"""Average ticks to completion, based on current player science and experimentation level"""
+		freqs = self.eta_details.items()
+		freqs.sort(key=lambda (ticks, p): p, reverse=True)
+		return freqs[0][0]
 
 	@property
 	def eta_range(self):
 		"""Ticks to completion, based on current player science and experimentation level.
-		Returns (lower bound, upper bound)."""
-		# TODO values changed - experimentation is now (value*72pts)/24hrs
-		player = self.player
-		min_sci_rate = self.player.science
-		max_sci_rate = self.player.science + 4 * self.player.experimentation.level
-		min_eta = max(0, int(math.ceil(float(self.remaining) / max_sci_rate)))
-		max_eta = max(0, int(math.ceil(float(self.remaining) / min_sci_rate)))
-		return (min_eta, max_eta)
+		Returns (lower bound, upper bound). Inaccurate."""
+		ticks = self.eta_details.keys()
+		return min(ticks), max(ticks)
 
 	@property
 	def eta_details(self):
 		"""Ticks to completion, based on current player science and experimentation level.
 		Returns a dict {ticks: chance}, ie. mapping from potential completion time in ticks
 		to the probability that it will complete at that time."""
-		raise NotImplementedError # TODO proper freq distribution
+		# Experimentation gives you 72pts to a random science every production
+		# Stupid brute force implementation for now
+		required = self.required
+		rate = self.player.science
+		def combine(base, add, add_time, chance):
+			# add given add into base with +add_time tick and modified by chance
+			for time, p in add.items():
+				time += add_time
+				p *= chance
+				base[time] = base.get(time, 0) + p
+		def _eta_details(value, time_to_prod=self.galaxy.production_rate):
+			naive_eta = max(0, int(math.ceil((required - value)/rate)))
+			if naive_eta <= time_to_prod: return {naive_eta: 1}
+			base = {}
+			without_extra = _eta_details(value + rate*time_to_prod)
+			with_extra = _eta_details(value + rate*time_to_prod + 72)
+			combine(base, without_extra, time_to_prod, 6/7.)
+			combine(base, with_extra, time_to_prod, 1/7.)
+			return base
+		return _eta_details(self.current, self.galaxy.production_rate - self.galaxy.production_counter)
