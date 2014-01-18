@@ -5,7 +5,7 @@ galaxy = Galaxy()
 
 width = max(len(name) for name in galaxy.players_by_name)
 
-COLUMNS = 100
+COLUMNS = 100 - width
 for attr in ['total_stars', 'ships', 'economy', 'industry', 'science']:
 	print "  {attr} graph:".format(attr=attr)
 	scale = max(getattr(player, attr) for player in galaxy.players) / float(COLUMNS)
