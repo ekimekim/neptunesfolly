@@ -46,18 +46,22 @@ Fleet object: {
 	x: string float. Current x coordinate.
 	y: string float. Current y coordinate.
 	n: string. fleet name.
-	p: list of star ids, describing planned path.
+	p: list of star ids, describing planned path. Changed? (seems to be no longer present)
 	puid: player index of owner.
 	st: number of ships in fleet
 	uid: fleet id. int. appears sequential from game start, across all players.
 	w: int. unknown. observed: 0
 	ouid: star id of star fleet is currently orbiting. not present while fleet in transit.
+	l: Unknown. Observed: 0
+	o: Unknown. Observed: [0, 128, 1, 0]
 }
 Player object: {
 	alias: string, player name
 	avatar: int, identifies player avatar image
+	ai: int. observed: 0 (normal)
 	conceded: int. observed: 0 (normal), 2 (AFK), 3 (KO)
 	huid: int. seems to be uid + 1. might mean "human uid" ?
+		edit: observed (uid, huid) = (3, 7). So unknown.
 	karma_to_give: int. karma points not already given.
 	missed_turns: int. only observed so far as 0, may be related to turn-based games or to marking of AFK.
 	ready: int. assumed to be 0 for players not marked ready, 1 for players marked ready in turn-based games.
@@ -74,6 +78,9 @@ Player object: {
 	cash: int. amount of cash available.
 	researching: name of tech currently researching
 	researching_next: name of tech to research next
+	New:
+		war: dict of {(0 to 7): 3}. No other values observed.
+		countdown_to_war: As war, but values are 0.
 }
 Tech names are as follows:
 	"banking", "manufacturing", "propulsion" (range), "research" (experiementation),
@@ -82,9 +89,9 @@ Tech object: {
 	level: Player's current tech level in this tech
 	value: Seems related to tech level.
 	ONLY PRESENT FOR THE PLAYER WHICH REQUESTED THE INFO:
-	sv: unknown
+	sv: unknown. Observed: 0
 	research: current number of research points in this tech
-	bv: unknown. might be "base value"?
+	bv: unknown. might be "base value"? observed: 1
 	brr: number of research points needed to complete FIRST level. Actual points required = level * brr
 }
 Star object: {
@@ -95,7 +102,7 @@ Star object: {
 	x: string float. X coordinate of star
 	y: string float. Y coordinate of star
 	ONLY PRESENT IF STAR IS VISIBLE:
-	c: int. Might be number of carriers. (edit: It is not. Still 0 when orbiting carrier present)
+	c: float. Might be number of carriers. (edit: It is not. Still 0 when orbiting carrier present)
 	e: Economy present. 0 if unoccupied.
 	g: Garrison value. 0 if unoccupied.
 	ga: ??? Might be "number of filled garrison spots"
@@ -104,9 +111,12 @@ Star object: {
 	r: Total resources (after terraforming)
 	s: Science present. 0 if unoccupied.
 	st: Ships present. 0 if unoccupied.
+	v: Unknown. Observed: 1
 }
 A note on coordinates:
 	All coordinates are based on the galaxy map, with unknown origin, and unknown units.
+	edit: Observed scale based on comparing coord distance with in-game distance:
+		1u = 8ly (also interesting to note: in game figures are truncated, not rounded)
 
 
 POST http://triton.ironhelmet.com/grequest/fetch_unread_count
