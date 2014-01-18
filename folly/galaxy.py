@@ -1,7 +1,8 @@
 import math
 
-from request import request, USE_DEFAULT
+from request import order, USE_DEFAULT
 from helpers import dotdict, aliasdict, _HasData
+from helpers import safe_property as property
 
 
 class Galaxy(_HasData):
@@ -13,7 +14,7 @@ class Galaxy(_HasData):
 		self.update()
 
 	def update(self):
-		self.data = request('order', order='full_universe_report', game_number=self.game_number, cookies=self.cookies, extra_opts=self.request_opts)
+		self.data = order('full_universe_report', game_number=self.game_number, cookies=self.cookies, extra_opts=self.request_opts)
 
 	def __getattr__(self, attr):
 		try:
@@ -141,6 +142,7 @@ class Fleet(_HasGalaxy, _HasData, _HasName):
 
 	@property
 	def waypoints(self):
+		# TODO broken
 		return [Star(star_id, galaxy=self.galaxy) for star_id in self.data.p]
 
 	@property
@@ -155,6 +157,7 @@ class Fleet(_HasGalaxy, _HasData, _HasName):
 
 	@property
 	def eta(self):
+		# TODO broken (dep. waypoints)
 		"""Reports number of ticks until fleet reaches each destination in waypoint list.
 		Returns a list of integers in the same order as waypoints.
 		eg. You could map stars to the fleet's eta with dict(zip(fleet.waypoints, fleet.eta))
@@ -183,7 +186,6 @@ class Star(_HasGalaxy, _HasData, _HasName):
 		'owner': 'player',
 		'name': 'n',
 		'economy': 'e',
-		'carriers': 'c',
 		'garrison': 'g',
 		'industry': 'i',
 		'resources': 'r',
@@ -342,6 +344,7 @@ class Tech(_HasData, _HasGalaxy, _HasName):
 	@property
 	def eta(self):
 		"""Most likely ticks to completion, based on current player science and experimentation level"""
+		# TODO values changed - experimentation is now (value*72pts)/24hrs
 		player = self.player
 		sci_rate = self.player.science + 4 * self.player.experimentation.level / 7.0
 		return max(0, int(math.ceil(self.remaining / sci_rate)))
@@ -350,6 +353,7 @@ class Tech(_HasData, _HasGalaxy, _HasName):
 	def eta_range(self):
 		"""Ticks to completion, based on current player science and experimentation level.
 		Returns (lower bound, upper bound)."""
+		# TODO values changed - experimentation is now (value*72pts)/24hrs
 		player = self.player
 		min_sci_rate = self.player.science
 		max_sci_rate = self.player.science + 4 * self.player.experimentation.level

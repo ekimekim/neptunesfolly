@@ -1,3 +1,5 @@
+import functools
+import traceback
 
 
 class dotdict(dict):
@@ -59,3 +61,19 @@ class _HasData(object):
 		return self.data == other.data
 	def __ne__(self, other):
 		return not self == other
+
+
+class PropertyError(Exception): pass
+def safe_property(fn):
+	"""Acts like @property, but patches a subtle problem: If the property code raises AttributeError for any reason,
+	the property is ignored and getattr is consulted instead (sometimes causing infinite recursion).
+	With this wrapper, the AttributeError will be "wrapped" in a PropertyError, and the traceback printed.
+	"""
+	@functools.wraps(fn)
+	def wrapper(self):
+		try:
+			return fn(self)
+		except AttributeError as ex:
+			traceback.print_exc()
+			raise PropertyError(str(ex))
+	return property(wrapper)

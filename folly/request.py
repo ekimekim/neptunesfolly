@@ -9,11 +9,15 @@ except ImportError:
 
 from helpers import dotdict
 
-BASE_URL = "http://5.tritonsrage.appspot.com/grequest"
+BASE_URL = "http://triton.ironhelmet.com/grequest"
+API_VERSION = '7'
 
 USE_DEFAULT = object() # we use object() to get a unique constant
 DEFAULT_COOKIE_PATH = "~/.npcookie"
 default_cookies = None
+
+def order(order_name, **kwargs):
+	return request('order', order=order_name, version=API_VERSION, **kwargs)
 
 def request(name, cookies=USE_DEFAULT, game_number=USE_DEFAULT, json=True, extra_opts={}, **data):
 	"""Do a request with given name and form data."""
