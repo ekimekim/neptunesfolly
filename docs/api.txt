@@ -54,7 +54,17 @@ Fleet object: {
 	w: int. unknown. observed: 0
 	ouid: star id of star fleet is currently orbiting. not present while fleet in transit.
 	l: Unknown. Observed: 0
-	o: Unknown. Observed: [0, 128, 1, 0]
+	o: Orders. List of tuples (delay, star_id, action, num_ships)
+		Appears to be 0 for all but star_id if not owned by calling player.
+		Observed actions:
+			0: "Do nothing"
+			1: "Collect All Ships"
+			2: "Drop All Ships"
+			3: "Collect N Ships"
+			4: "Drop N Ships"
+			5: "Collect all but N Ships"
+			6: "Drop all but N Ships"
+			7: "Garrison Star with N Ships"
 }
 Player object: {
 	alias: string, player name
