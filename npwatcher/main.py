@@ -36,6 +36,8 @@ def setup_logging():
 	report_handler = emailer.EmailAggregateHandler((SENDER_EMAIL, password), TARGET_EMAIL)
 	report_handler.setLevel(logging.INFO)
 	report_logger.addHandler(report_handler)
+	fmt = "%(name)s:%(levelname)s: %(message)s"
+	report_handler.setFormatter(logging.Formatter(fmt))
 
 def load_galaxies(game_number):
 	galaxies = {}
