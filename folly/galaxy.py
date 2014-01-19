@@ -142,8 +142,20 @@ class Fleet(_HasGalaxy, _HasData, _HasName):
 
 	@property
 	def waypoints(self):
-		# TODO broken
-		return [Star(star_id, galaxy=self.galaxy) for star_id in self.data.p]
+		"""Returns bare list of waypoints."""
+		return [Star(star_id, galaxy=self.galaxy) for delay, star_id, order, num_ships in self.data.o]
+
+	@property
+	def orders(self):
+		"""Returns tuples (delay, star, order, num_ships).
+		order is one of the following strings:
+			"Do Nothing", "Collect All", "Drop All", "Collect", "Drop", "Collect All But", "Drop All But", "Garrison"
+		Note that num_ships is always 0 for "Do Nothing", "Collect All" and "Drop All"
+		Note that all fleets not owned by galaxy.player have delay 0 and order "Do Nothing"
+		"""
+		ORDER_MAP = ["Do Nothing", "Collect All", "Drop All", "Collect", "Drop", "Collect All But", "Drop All But", "Garrison"]
+		return [(delay, Star(star_id, galaxy=self.galaxy), ORDER_MAP[order], num_ships)
+		        for delay, star_id, order, num_ships in self.data.o]
 
 	@property
 	def player(self):
@@ -157,18 +169,19 @@ class Fleet(_HasGalaxy, _HasData, _HasName):
 
 	@property
 	def eta(self):
-		# TODO broken (dep. waypoints)
 		"""Reports number of ticks until fleet reaches each destination in waypoint list.
 		Returns a list of integers in the same order as waypoints.
 		eg. You could map stars to the fleet's eta with dict(zip(fleet.waypoints, fleet.eta))
+		or get the total time with fleet.eta[-1]
 		"""
 		result = []
 		time = 0
 		position = self
-		for star in self.waypoints:
+		for delay, star, order, num_ships in self.orders:
 			time += int(math.ceil(star.distance(position) / self.galaxy.fleet_speed))
 			position = star
 			result.append(time)
+			time += delay
 		return result
 
 	@property
