@@ -1,5 +1,6 @@
 import os
 import logging
+from getpass import getpass
 
 import simplejson as json
 from scriptlib import with_argv
@@ -9,6 +10,7 @@ import gevent.event
 from folly.galaxy import Galaxy
 
 import emailer
+from reportsystem import report_list
 import reports
 
 GALAXY_CACHE_PATH = '/var/lib/npwatcher/galaxies'
@@ -17,36 +19,20 @@ SENDER_EMAIL = 'secondary.mikelang3000@gmail.com'
 TARGET_EMAIL = 'mikelang3000@gmail.com'
 
 force_refresh = gevent.event.Event()
-report_list = []
 
-class Report(object):
-	"""Reports should log to their self.logger instance.
-	Logs are aggregated and a report email is sent."""
-	def __init__(self, fn=None, name=None):
-		"""Can be optionally used as a decorator, or a subclass can override __call__ directly.
-		name can be passed in explicitly, or is taken from the name of the fn, or the class name is used.
-		"""
-		report_list.append(self)
-		self.name = name
-		if fn and not self.name: self.name = fn.__name__
-		if not self.name: self.name = self.__class__.__name__
-		self.logger = report_logger.getChild(self.name)
-	def __call__(self, galaxies):
-		self.fn(galaxies)
-
-def setup_logging(game_number):
+def setup_logging():
 	global logger, report_logger, report_handler
 
 	password = getpass("Password for {}: ".format(SENDER_EMAIL))
 
 	root_logger = logging.getLogger()
 	root_logger.setLevel(logging.DEBUG)
-	root_logger.addHandler(StreamHandler())
+	root_logger.addHandler(logging.StreamHandler())
 
 	logger = logging.getLogger('npwatcher')
 
 	report_logger = logger.getChild('reports')
-	report_handler = EmailAggregateHandler((SENDER_EMAIL, password), TARGET_EMAIL)
+	report_handler = emailer.EmailAggregateHandler((SENDER_EMAIL, password), TARGET_EMAIL)
 	report_handler.setLevel(logging.INFO)
 	report_logger.addHandler(report_handler)
 
@@ -69,13 +55,16 @@ def load_galaxies(game_number):
 	return galaxies
 
 def save_galaxy(galaxy):
-	filepath = os.path.join(GALAXY_CACHE_PATH, galaxy.game_number, "{}.json".format(galaxy.now))
+	filepath = os.path.join(GALAXY_CACHE_PATH, galaxy.game_number, "{:.2f}.json".format(galaxy.now))
+	if not os.path.exists(os.path.dirname(filepath)):
+		os.makedirs(os.path.dirname(filepath))
 	with open(filepath, 'w') as f:
 		f.write(json.dumps(galaxy.data))
 
 @with_argv
-def main(game_number=os.environ['NP_GAME_NUMBER']):
-	setup_logging(game_number)
+def main(game_number=None):
+	if not game_number: game_number = os.environ['NP_GAME_NUMBER']
+	setup_logging()
 
 	try:
 		galaxies = load_galaxies(game_number)
@@ -120,3 +109,6 @@ def main(game_number=os.environ['NP_GAME_NUMBER']):
 		if force_refresh.wait(minutes_to_tick * 60):
 			logger.info("Forced refresh")
 		force_refresh.clear()
+
+if __name__=='__main__':
+	main()

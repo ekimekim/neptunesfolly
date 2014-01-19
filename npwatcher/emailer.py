@@ -33,6 +33,7 @@ def send_email(creds, target, subject, body):
 	message['To'] = target
 	message['Subject'] = subject
 
+	logger.debug("Sending message: {}".format(subject))
 	first_attempt = True
 	while True:
 		try:
