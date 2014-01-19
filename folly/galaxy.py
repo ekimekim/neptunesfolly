@@ -75,7 +75,7 @@ class Galaxy(_HasData):
 
 	@property
 	def stars(self):
-		return [Star(int(star_id), galaxy=self) for star_id in sorted(self.data.stars)]
+		return [Star(int(star_id), galaxy=self) for star_id in sorted(self.data.stars, key=int)]
 
 	@property
 	def start_time(self):
