@@ -8,6 +8,7 @@ import gevent
 import gevent.event
 
 from folly.galaxy import Galaxy
+from folly.helpers import dotdict
 
 import emailer
 from reportsystem import report_list
@@ -43,7 +44,7 @@ def load_galaxies(game_number):
 		try:
 			filepath = os.path.join(directory, filename)
 			with open(filepath) as f:
-				data = json.loads(f.read())
+				data = json.loads(f.read(), object_hook=dotdict)
 			galaxy = Galaxy(from_data=data)
 		except (OSError, IOError, json.JSONDecodeError):
 			logger.warning("Failed to load galaxy {!r}".format(filepath), exc_info=True)

@@ -69,7 +69,7 @@ def players_core_stats(logger, galaxy, oldgalaxy):
 @CompareReport
 def unexpected_ship_counts(logger, galaxy, oldgalaxy):
 	SHIP_CHANGE_THRESHOLD = 4 
-	for player, old_player in zip(galaxy.players, old_galaxy.players):
+	for player, old_player in zip(galaxy.players, oldgalaxy.players):
 		missing = int(old_player.ships + old_player.ship_rate) - player.ships
 		if missing > SHIP_CHANGE_THRESHOLD:
 			logger.info("{player.name} missing {missing} ships - possible battle?".format(player=player, missing=missing))
