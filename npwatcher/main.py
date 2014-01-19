@@ -106,7 +106,7 @@ def main(game_number=None):
 		))
 
 		minutes_to_tick = galaxy.tick_rate - galaxy.tick_fragment
-		if force_refresh.wait(minutes_to_tick * 60):
+		if force_refresh.wait(minutes_to_tick * 60 + 10): # we wait an extra 10sec to avoid nasty race cdns with the server
 			logger.info("Forced refresh")
 		force_refresh.clear()
 
