@@ -7,11 +7,15 @@ from helpers import safe_property as property
 
 class Galaxy(_HasData):
 
-	def __init__(self, game_number=USE_DEFAULT, cookies=USE_DEFAULT, **request_opts):
+	def __init__(self, game_number=USE_DEFAULT, cookies=USE_DEFAULT, from_data=None, **request_opts):
+		"""If from_data is given, it uses given data instead of doing an update."""
 		self.game_number = game_number
 		self.cookies = cookies
 		self.request_opts = request_opts
-		self.update()
+		if from_data:
+			self.data = from_data
+		else:
+			self.update()
 
 	def update(self):
 		self.data = order('full_universe_report', game_number=self.game_number, cookies=self.cookies, extra_opts=self.request_opts)
