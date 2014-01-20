@@ -9,6 +9,7 @@ import gevent.event
 
 from folly.galaxy import Galaxy
 from folly.helpers import dotdict
+from folly.requests import RequestError
 
 import emailer
 from reportsystem import report_list
