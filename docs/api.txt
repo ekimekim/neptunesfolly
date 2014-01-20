@@ -211,7 +211,7 @@ message object: {
 	activity: Date in common format, indicating last modified time of thread
 	comment_count: Number of comments. 0 for events, which don't have comments.
 	created: Date in common format, creation time of thread
-	group: "game_diplomacy"
+	group: "game_diplomacy" or "game_event"
 	key: string. Seems to be a unique id for the thread.
 	payload: {
 		FOR EVENTS:
@@ -261,6 +261,7 @@ comment object: {
 }
 
 
+                                           (confirm: typo?)
 POST http://triton.ironhelmet.com/grequest/fetch_game_message_comments
 Cookie: ???
 Content-Type: application/x-www-form-urlencoded

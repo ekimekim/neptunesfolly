@@ -6,9 +6,9 @@ from request import USE_DEFAULT, request
 from helpers import _HasData
 
 
-def unread_count(game_number=USE_DEFAULT, cookies=USE_DEFAULT):
+def unread_count(**request_kwargs):
 	"""Return (int, int), count of unread messages/events respectively."""
-	resp = request("fetch_unread_count", type="message:unread_count")
+	resp = request("fetch_unread_count", type="message:unread_count", **request_kwargs)
 	return resp['diplomacy'], resp['events']
 
 
@@ -31,12 +31,17 @@ def message_threads(**kwargs):
 def _fetch_iterator(callback=None, start=0, chunksize=10, **kwargs):
 	"""Returns an iterator that lazily fetches results. Passes kwargs to request().
 	start indicates how many messages to skip. chunksize indicates how many to fetch with each request.
-	If callback is given, yields callback(result) instead of result."""
+	If callback is given, yields callback(result) instead of result.
+	Note that it will stop iterating as soon as it sees the end. If you wish to re-check for further messages
+	that have arrived sice then, you should create a fresh iterator.
+	"""
 	if not callback: callback = lambda x: x
 	for offset in count(start, chunksize):
-		resp = request(*args, **kwargs, count=chunksize, offset=offset)
+		resp = request(count=chunksize, offset=offset, **kwargs)
 		for message in resp['messages']:
 			yield callback(message)
+		if len(resp['messages']) != chunksize:
+			return # stop iterating if we run out
 
 
 def _date_to_epoch(s):
@@ -45,6 +50,10 @@ def _date_to_epoch(s):
 
 class Message(_HasData):
 	"""Base class for Events and diplomacy Threads."""
+	aliases = {
+		'modified': 'activity',
+	}
+
 	def __init__(self, message_data):
 		"""Expects arg containing message data already fetched from server."""
 		self.data = message_data
@@ -85,12 +94,13 @@ class Event(Message):
 	The Event() constructor will automatically create the correct kind of Event based on payload.template
 	Unknown event types create a bare Event() object.
 	"""
+	name = None # subclasses should override with template name
 
 	def __new__(cls, data):
-		if cls is Event:
-		for subcls in cls.__subclasses___():
-			if subcls.name == data['payload']['template']:
-				return subcls(data)
+		if cls is Event: # subclasses should ignore this
+			for subcls in cls.__subclasses___():
+				if subcls.name == data.payload.template:
+					return subcls(data)
 		return super(Event, self).__new__(data)
 
 	@property
@@ -115,4 +125,39 @@ class Event(Message):
 class MessageThread(Message):
 	"""Represents a conversation (initial message + comments) in the diplomacy menu"""
 
-	# TODO
+	def __init__(self, data):
+		self.data = data
+		# to simplify things, we preload all the comments immediately
+		self.comments = list(self.get_comments(chunksize=self.comment_count))
+
+	def get_comments(start=0, chunksize=10, **request_kwargs):
+		"""Returns an iterator that lazily fetches comments from the server"""
+		return _fetch_iterator(MessageComment, name=fetch_game_message_comments, message_key=self.key,
+		                       start=start, chunksize=chunksize, **request_kwargs)
+
+	@property
+	def text(self):
+		return self.payload.body # TODO decode html encoding
+
+	@property
+	def subject(self):
+		return self.payload.subject
+
+
+class MessageComment(_HasData):
+	def __init__(self, data):
+		self.data = data
+
+	@property
+	def text(self):
+		return self.body # TODO decode html encoding
+
+	@property
+	def created(self):
+		return _date_to_epoch(self.data.created)
+
+	def lookup_sender(self, galaxy):
+		"""Use given galaxy to lookup message sender and return a Player object"""
+		found = [player for player in galaxy.players if player.user_id == self.sender]
+		if len(found) != 1: raise ValueError("Player not found or user_id not unique")
+		return found[0]
